@@ -37,7 +37,7 @@ class treeLooper{
 /*
  * Initialise tree with sample, jet type and (optional) location of tuples
  */
-treeLooper::treeLooper(TString file, TString jetType, TString qgMiniTuplesDir = "~tomc/public/merged/QGMiniTupleSpring15/"){
+treeLooper::treeLooper(TString file, TString jetType, TString qgMiniTuplesDir = "~amarini/public/merged/QGMiniTuple76X/"){
   useBTagging = jetType.Contains("antib");
   jetType.ReplaceAll("_antib","");
 
