@@ -29,7 +29,8 @@ void setCorrectMinimum(TH2D* h){
 
 void makeProfile2D(TString xAndyVar, bool useBins = false, bool extraBinInformation = false){
 //std::vector<TString> files	= {"QCD_Pt-15to3000_Tune4C_Flat_13TeV_pythia8_PU20"};
-  std::vector<TString> files	= {"TTJets"};
+  //std::vector<TString> files	= {"TTJets"};
+  std::vector<TString> files	= {"QCD_Pt-15to7000_TuneCUETP8M1_Flat_13TeV_pythia8"};
   std::vector<TString> jetTypes = {"AK4chs"};
 
   // Define binning for plots (i.e. separate plots for each bin)
@@ -77,7 +78,7 @@ void makeProfile2D(TString xAndyVar, bool useBins = false, bool extraBinInformat
 //    int& yAxisVar 	= (xAndyVar.Contains("_nPileUp"?		t.nPileUp : t.nPriVtxs));
 
       // Init local QGLikelihoodCalculator
-      QGLikelihoodCalculator localQG("../data/pdfQG_" + jetType + "_13TeV_v1.root");
+      QGLikelihoodCalculator localQG("../data/pdfQG_" + jetType + "_13TeV_v2.root");
 
       // Creation of histos
       std::map<TString, TProfile2D*> plots;

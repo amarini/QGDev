@@ -27,7 +27,8 @@ int main(int argc, char**argv){
   binClass bins = getNoBinning();
 
   // For different jet types (if _antib is added bTag is applied)
-  for(TString file : {"QCD_Pt-15to3000_Tune4C_Flat_13TeV_pythia8_PU20"}){
+  std::vector<TString> files	= {"QCD_Pt-15to7000_TuneCUETP8M1_Flat_13TeV_pythia8"};
+  for(TString file : files){
     for(TString jetType : {"AK4chs"}){
       std::cout << "Making plots for " << jetType << " in file " << file << "..." << std::endl;
       system("rm -rf plots/distributions/" + file + "/" + jetType);
@@ -38,7 +39,7 @@ int main(int argc, char**argv){
       bins.setReference("rho", &t.rho);
 
       // Init local localQGikelihoodCalculator
-      QGLikelihoodCalculator localQG("../data/pdfQG_" + jetType + "_13TeV_v1.root");
+      QGLikelihoodCalculator localQG("../data/pdfQG_" + jetType + "_13TeV_v2.root");
 
       // Creation of histos
       std::map<TString, TH1D*> plots;

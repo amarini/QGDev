@@ -84,6 +84,7 @@ class qgMiniTuple : public edm::EDAnalyzer{
 
       bool weStillNeedToCheckJets, weAreUsingPatJets;
       bool weStillNeedToCheckJetCandidates, weAreUsingPackedCandidates;
+      const bool 					usePuppi;
 };
 
 
@@ -102,7 +103,8 @@ qgMiniTuple::qgMiniTuple(const edm::ParameterSet& iConfig) :
   jecService( 									iConfig.getParameter<std::string>("jec")),
   minJetPt(									iConfig.getUntrackedParameter<double>("minJetPt", 20.)),
   deltaRcut(									iConfig.getUntrackedParameter<double>("deltaRcut", 0.3)),
-  useQC(									iConfig.getUntrackedParameter<bool>("useQualityCuts", false))
+  useQC(									iConfig.getUntrackedParameter<bool>("useQualityCuts", false)),
+  usePuppi(									iConfig.getUntrackedParameter<bool>("usePuppi", false))
 {
   weStillNeedToCheckJets	  = true;
   weStillNeedToCheckJetCandidates = true;
@@ -294,23 +296,28 @@ std::tuple<int, float, float> qgMiniTuple::calcVariables(const reco::Jet *jet, e
   float sum_weight = 0., sum_deta = 0., sum_dphi = 0., sum_deta2 = 0., sum_dphi2 = 0., sum_detadphi = 0., sum_pt = 0.;
   int mult = 0;
 
+  double w=1.0;
   //Loop over the jet constituents
   for(auto daughter : jet->getJetConstituentsQuick()){
     if(isPackedCandidate(daughter)){											//packed candidate situation
       auto part = static_cast<const pat::PackedCandidate*>(daughter);
 
+      if (usePuppi) w = part->puppiWeight();
+
       if(part->charge()){
         if(!(part->fromPV() > 1 && part->trackHighPurity())) continue;
         if(useQC){
           if((part->dz()*part->dz())/(part->dzError()*part->dzError()) > 25.) continue;
-          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) ++mult;
-        } else ++mult;
+          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) mult+=w;
+        } else mult += w;
       } else {
         if(part->pt() < 1.0) continue;
-        ++mult;
+        mult+=w;
       }
     } else {
       auto part = static_cast<const reco::PFCandidate*>(daughter);
+
+      if (usePuppi) throw cms::Exception("NotImplemented","Puppi and PFCandidate");
 
       reco::TrackRef itrk = part->trackRef();
       if(itrk.isNonnull()){												//Track exists --> charged particle
@@ -338,7 +345,7 @@ std::tuple<int, float, float> qgMiniTuple::calcVariables(const reco::Jet *jet, e
     float deta   = daughter->eta() - jet->eta();
     float dphi   = reco::deltaPhi(daughter->phi(), jet->phi());
     float partPt = daughter->pt();
-    float weight = partPt*partPt;
+    float weight = partPt*partPt *w ;
 
     sum_weight   += weight;
     sum_pt       += partPt;
