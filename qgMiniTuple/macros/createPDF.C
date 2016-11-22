@@ -28,19 +28,21 @@ TString switchQG(TString inputBin){
 
 // Main function to create the pdf's
 int main(int argc, char**argv){
-  TString version = "80X";
+  TString version = "8020";
 
   // Define binning for pdfs (details and more options in binningConfigurations.h)
   binClass bins;
   if(version.Contains("v2")) 		bins = getV2Binning();
   if(version.Contains("80X")) 		bins = get76XBinning();
+  if(version.Contains("8020")) 		bins = get76XBinning();
   else return 1;
 
   // For different jet types (if _antib is added bTag is applied)
   for(TString jetType : {"AK4chs","AK4chs_antib"}){ //,"AK4","AK4_antib"}){
     std::cout << "Building pdf's for " << jetType << "..." << std::endl;
 
-    treeLooper t("QCD_AllPtBins", jetType);										// Init tree (third argument is the directory path, if other than default in treeLooper.h)
+    //treeLooper t("QCD_AllPtBins", jetType);										// Init tree (third argument is the directory path, if other than default in treeLooper.h)
+    treeLooper t("QCD_Pt_15_7000", jetType);										// Init tree (third argument is the directory path, if other than default in treeLooper.h)
     bins.setReference("pt",  &t.pt);											// Give the binning class a pointer to the variables used to bin in
     bins.setReference("eta", &t.eta);
     bins.setReference("rho", &t.rho);
@@ -53,6 +55,11 @@ int main(int argc, char**argv){
         pdfs["axis2" + histName] = new TH1D("axis2" + histName, "axis2" + histName, 100, 0, 8);				// Has been 200 bins before, but seemed to have a bit too much fluctuations still
         pdfs["mult"  + histName] = new TH1D("mult"  + histName, "mult"  + histName, 140, 2.5, 142.5);
         pdfs["ptD"   + histName] = new TH1D("ptD"   + histName, "ptD"   + histName, 100, 0, 1);				// Also 200 before
+
+        pdfs["axis2W" + histName] = new TH1D("axis2W" + histName, "axis2W" + histName, 100, 0, 8);				// Has been 200 bins before, but seemed to have a bit too much fluctuations still
+        pdfs["axis1W" + histName] = new TH1D("axis1W" + histName, "axis1W" + histName, 100, 0, 8);				// Has been 200 bins before, but seemed to have a bit too much fluctuations still
+        pdfs["multW"  + histName] = new TH1D("multW"  + histName, "multW"  + histName, 560, 2.5, 142.5);
+        pdfs["ptDW"   + histName] = new TH1D("ptDW"   + histName, "ptDW"   + histName, 100, 0, 1);				// Also 200 before
       }
     }
 
@@ -74,13 +81,18 @@ int main(int argc, char**argv){
       pdfs["axis2" + histName]->Fill(t.axis2, t.weight);								// "axis2" already contains the log
       pdfs["mult"  + histName]->Fill(t.mult,  t.weight);
       pdfs["ptD"   + histName]->Fill(t.ptD,   t.weight);
+      //puppi
+      pdfs["axis2W" + histName]->Fill(t.axis2W, t.weight);							
+      pdfs["axis1W" + histName]->Fill(t.axis1W, t.weight);							
+      pdfs["multW"  + histName]->Fill(t.multW,  t.weight);
+      pdfs["ptDW"   + histName]->Fill(t.ptDW,   t.weight);
     }
 
     // Try to add statistics from neighbours (first make copy, so you don't get an iterative effect)
     std::map<TString, TH1D*> pdfsCopy;
     for(auto& pdf : pdfs) pdfsCopy[pdf.first] = (TH1D*) pdf.second->Clone(pdf.first + "clone");
     for(TString binName : bins.getAllBinNames()){
-      for(TString var : {"axis2","mult","ptD"}){
+      for(TString var : {"axis2","mult","ptD","ptDW","axis1W","axis2W","multW"}){
         for(TString neighbour : bins.getNeighbourBins(binName, var)){							// If neighbours are defined: add their statistics
           for(TString type : {"quark","gluon"}){
             pdfs[var + "_" + type + "_" + binName]->Add(pdfsCopy[var + "_" + type + "_" + neighbour]);

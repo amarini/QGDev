@@ -30,7 +30,8 @@ TString replace(TString input, TString a, TString b){
 
 
 int main(int argc, char**argv){
-  std::vector<TString> files	= {"QCD_AllPtBins"};
+  //std::vector<TString> files	= {"QCD_AllPtBins"};
+  std::vector<TString> files	= {"QCD_Pt_15_7000"};
   //std::vector<TString> files	= {"QCD_Pt-15to3000_Tune4C_Flat_13TeV_pythia8_S14"};
   std::vector<TString> jetTypes = {"AK4chs"};
 
@@ -49,8 +50,8 @@ int main(int argc, char**argv){
 
       // Init local QGLikelihoodCalculators to compare, now we are comparing the 76X pdf's with the 80X pdf's
       std::map<TString, QGLikelihoodCalculator*> localQG;
-      localQG["76X"] = new QGLikelihoodCalculator("../data/pdfQG_" + jetType + "_13TeV_76X.root");
-      localQG["80X"] = new QGLikelihoodCalculator("../data/pdfQG_" + jetType + "_13TeV_80X.root");
+      //localQG["76X"] = new QGLikelihoodCalculator("../data/pdfQG_" + jetType + "_13TeV_76X.root");
+      localQG["80X"] = new QGLikelihoodCalculator("../data/pdfQG_" + jetType + "_13TeV_8020.root");
 
       // Keep track of different ROC types
       std::vector<TString> rocTypes;
@@ -65,6 +66,12 @@ int main(int argc, char**argv){
             plots["axis2"  + histName] 	= new TH1D("axis2"  + histName, "axis2"     + histName, 200, 0, 8);
             plots["ptD"    + histName]	= new TH1D("ptD"    + histName, "ptD"       + histName, 200, 0, 1);
             plots["mult"   + histName]	= new TH1D("mult"   + histName, "mult"      + histName, 140, 2.5, 142.5);
+
+            plots["axis1W"  + histName] = new TH1D("axis1W"  + histName, "axis1W"     + histName, 200, 0, 8);
+            plots["axis2W"  + histName] = new TH1D("axis2W"  + histName, "axis2W"     + histName, 200, 0, 8);
+            plots["ptDW"    + histName]	= new TH1D("ptDW"    + histName, "ptDW"       + histName, 200, 0, 1);
+            plots["multW"   + histName]	= new TH1D("multW"   + histName, "multW"      + histName, 140, 2.5, 142.5);
+
             for(TString var : {"qg","axis2","ptD","mult"}){
               for(auto& l : localQG){
                 TString id = var + "_" + l.first + histName;
@@ -94,6 +101,12 @@ int main(int argc, char**argv){
         plots["axis2"   + histName]->Fill(t.axis2, t.weight);
         plots["ptD"     + histName]->Fill(t.ptD,   t.weight);
         plots["mult"    + histName]->Fill(t.mult,  t.weight);
+
+        plots["axis1W"   + histName]->Fill(t.axis1W, t.weight);
+        plots["axis2W"   + histName]->Fill(t.axis2W, t.weight);
+        plots["ptDW"     + histName]->Fill(t.ptDW,   t.weight);
+        plots["multW"    + histName]->Fill(t.multW,  t.weight);
+
         for(auto& l : localQG){
           plots["qg_"      + l.first + histName]->Fill(l.second->computeQGLikelihood(t.pt, t.eta, t.rho, {(float) t.mult, t.ptD, t.axis2}),	t.weight);
           plots["axis2_"   + l.first + histName]->Fill(l.second->computeQGLikelihood(t.pt, t.eta, t.rho, {-1, -1, t.axis2}), 			t.weight);
@@ -113,7 +126,7 @@ int main(int argc, char**argv){
         l.SetBorderSize(0);
 
         std::map<TString, TGraph*> roc;
-        for(TString var : {"qg","axis2","ptD","mult"}){
+        for(TString var : {"qg","axis2","ptD","mult","ptDW","axis1W","axis2W","multW"}){
           for(TString type : rocTypes){
             if(var.Contains("qg")  && type == "") continue;
             if(!var.Contains("qg") && type != "") continue; // skip single-variable likelihoods
@@ -126,6 +139,7 @@ int main(int argc, char**argv){
               double gluonRej = pdfGluon->Integral(0, bin);
               double quarkEff = 1.-pdfQuark->Integral(0, bin);
               if(var+type == "mult"){ gluonRej = 1.-gluonRej; quarkEff = 1.-quarkEff;}
+              if(var+type == "multW"){ gluonRej = 1.-gluonRej; quarkEff = 1.-quarkEff;}
               roc[var+type]->SetPoint(bin, gluonRej, quarkEff);
             }
 
@@ -134,10 +148,19 @@ int main(int argc, char**argv){
             if(var == "mult")	roc[var+type]->SetLineColor(type != rocTypes[0] ? kOrange    : kRed);
             if(var == "qg")	roc[var+type]->SetLineColor(type != rocTypes[1] ? kBlack     : kGray);
 
+            if(var == "axis1W")	{ roc[var+type]->SetLineColor(type != rocTypes[0] ? kBlue   : kBlue); roc[var+type]->SetLineStyle(7);}
+            if(var == "axis2W")	{ roc[var+type]->SetLineColor(type != rocTypes[0] ? kGreen+4   : kOrange); roc[var+type]->SetLineStyle(7);}
+            if(var == "ptDW")	{ roc[var+type]->SetLineColor(type != rocTypes[0] ? kMagenta+4   : kAzure+10); roc[var+type]->SetLineStyle(7);}
+            if(var == "multW")	{ roc[var+type]->SetLineColor(type != rocTypes[0] ? kOrange    : kMagenta); roc[var+type]->SetLineStyle(7);}
+
             TString entryName = "quark-gluon";
             if(var == "axis2") 	entryName = "-log(#sigma_{2})";
             if(var == "ptD") 	entryName = "p_{T}D";
             if(var == "mult") 	entryName = "multiplicity";
+            if(var == "multW") 	entryName = "puppi mult";
+            if(var == "ptDW") 	entryName = "puppi-p_{T}D";
+            if(var == "axis1W")	entryName = "puppi-axis1";
+            if(var == "axis2W")	entryName = "puppi-axis2";
             if(type == "_76X")	entryName += " likelihood 76X";
             if(type == "_80X")	entryName += " likelihood 80X";
             l.AddEntry(roc[var+type], entryName, "l");

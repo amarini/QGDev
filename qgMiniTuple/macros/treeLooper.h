@@ -27,6 +27,7 @@ class treeLooper{
     void setMaxEntries(int i){ maxEntries = i;};
  
     float rho, pt, eta, axis2, ptD, bTagValue, ptDoubleCone, ratioDoubleCone, weight, motherMass;
+    float axis1W,axis2W,ptDW,multW;//puppi
     int nEvent, mult, partonId, jetIdLevel, nGenJetsInCone, nJetsForGenParticle, nGenJetsForGenParticle, nPriVtxs, nPileUp, motherId;
     bool balanced, matchedJet, bTag;
     float additionalJets;
@@ -77,6 +78,11 @@ treeLooper::treeLooper(TString file, TString jetType, TString qgMiniTuplesDir = 
   qgMiniTuple->SetBranchAddress("nGenJetsInCone",		&nGenJetsInCone);
   qgMiniTuple->SetBranchAddress("nGenJetsForGenParticle",	&nGenJetsForGenParticle);
   qgMiniTuple->SetBranchAddress("nJetsForGenParticle",		&nJetsForGenParticle);
+
+  qgMiniTuple->SetBranchAddress("axis2W", 			&axis2W);
+  qgMiniTuple->SetBranchAddress("axis1W", 			&axis1W);
+  qgMiniTuple->SetBranchAddress("ptDW", 			&ptDW);
+  qgMiniTuple->SetBranchAddress("multW",	 		&multW);
 
   closebyJetdR = nullptr;
   closebyJetPt = nullptr;
